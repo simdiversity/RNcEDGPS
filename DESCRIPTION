@@ -1,11 +1,13 @@
-Package: RNcEDGPS
+Package: simdiversity.RNcEDGPS
 Type: Package
-Title: What the package does (short line)
+Title: Nonconvex Euclidean Distance Geometry Problem Solvers
 Version: 1.0
 Date: 2020-04-27
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
+Author: Mattia Egloff <megloff1@unil.ch> and Fran\\u00e7ois Bavaud <fbavaud@unil.ch>
+Maintainer: Mattia Egloff <megloff1@unil.ch>
 Description: More about what it does (maybe more than one line)
 License: What license is it under?
 Imports: Rcpp (>= 1.0.4)
 LinkingTo: Rcpp, RcppArmadillo
+Depends: 
+    R (>= 2.10)
