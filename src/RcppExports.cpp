@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // rcpparma_hello_world
 arma::mat rcpparma_hello_world();
-RcppExport SEXP _RNcEDGPS_rcpparma_hello_world() {
+RcppExport SEXP _simdiversity_RNcEDGPS_rcpparma_hello_world() {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -18,7 +18,7 @@ END_RCPP
 }
 // rcpparma_outerproduct
 arma::mat rcpparma_outerproduct(const arma::colvec& x);
-RcppExport SEXP _RNcEDGPS_rcpparma_outerproduct(SEXP xSEXP) {
+RcppExport SEXP _simdiversity_RNcEDGPS_rcpparma_outerproduct(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -29,7 +29,7 @@ END_RCPP
 }
 // rcpparma_innerproduct
 double rcpparma_innerproduct(const arma::colvec& x);
-RcppExport SEXP _RNcEDGPS_rcpparma_innerproduct(SEXP xSEXP) {
+RcppExport SEXP _simdiversity_RNcEDGPS_rcpparma_innerproduct(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -40,7 +40,7 @@ END_RCPP
 }
 // rcpparma_bothproducts
 Rcpp::List rcpparma_bothproducts(const arma::colvec& x);
-RcppExport SEXP _RNcEDGPS_rcpparma_bothproducts(SEXP xSEXP) {
+RcppExport SEXP _simdiversity_RNcEDGPS_rcpparma_bothproducts(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -51,14 +51,14 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_RNcEDGPS_rcpparma_hello_world", (DL_FUNC) &_RNcEDGPS_rcpparma_hello_world, 0},
-    {"_RNcEDGPS_rcpparma_outerproduct", (DL_FUNC) &_RNcEDGPS_rcpparma_outerproduct, 1},
-    {"_RNcEDGPS_rcpparma_innerproduct", (DL_FUNC) &_RNcEDGPS_rcpparma_innerproduct, 1},
-    {"_RNcEDGPS_rcpparma_bothproducts", (DL_FUNC) &_RNcEDGPS_rcpparma_bothproducts, 1},
+    {"_simdiversity_RNcEDGPS_rcpparma_hello_world", (DL_FUNC) &_simdiversity_RNcEDGPS_rcpparma_hello_world, 0},
+    {"_simdiversity_RNcEDGPS_rcpparma_outerproduct", (DL_FUNC) &_simdiversity_RNcEDGPS_rcpparma_outerproduct, 1},
+    {"_simdiversity_RNcEDGPS_rcpparma_innerproduct", (DL_FUNC) &_simdiversity_RNcEDGPS_rcpparma_innerproduct, 1},
+    {"_simdiversity_RNcEDGPS_rcpparma_bothproducts", (DL_FUNC) &_simdiversity_RNcEDGPS_rcpparma_bothproducts, 1},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_RNcEDGPS(DllInfo *dll) {
+RcppExport void R_init_simdiversity_RNcEDGPS(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

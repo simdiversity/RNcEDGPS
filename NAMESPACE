@@ -1,3 +1,3 @@
-useDynLib(RNcEDGPS, .registration=TRUE)
+useDynLib(simdiversity.RNcEDGPS, .registration=TRUE)
 importFrom(Rcpp, evalCpp)
 exportPattern("^[[:alpha:]]+")
