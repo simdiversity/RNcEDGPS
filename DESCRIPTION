@@ -6,7 +6,7 @@ Date: 2020-04-27
 Author: Mattia Egloff <megloff1@unil.ch> and Fran\\u00e7ois Bavaud <fbavaud@unil.ch>
 Maintainer: Mattia Egloff <megloff1@unil.ch>
 Description: More about what it does (maybe more than one line)
-License: What license is it under?
+License: MIT
 Imports: Rcpp (>= 1.0.4)
 LinkingTo: Rcpp, RcppArmadillo
 Depends: 
