@@ -31,10 +31,11 @@ validity.matrix <- function(M) {
 #' @export
 validity.weight <- function(M) {
     row_sums <- rowSums(
-      matrix(as.numeric(!is.na(M)), nrow = nrow(M)), na.rm = TRUE
+      validity.matrix(M)
     )
     result <- row_sums / sum(row_sums)
     names(result) <- rownames(M)
+    result
 }
 
 #' Compute the L1 dissimilarity
