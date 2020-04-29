@@ -1,109 +1,255 @@
-library(parallel)
-library(matrixcalc)
+#' @import magrittr
+#' @importFrom stats dist lm
+#' @importFrom utils combn
+#' @importFrom matrixcalc vech
+#' @importFrom parallel mcmapply
+#'
+NULL
 
-weight_valid <- function(in_data){
-  valid <- validity_matrix(in_data)
-  result = rowSums(valid)/sum(valid)
-  names(result) <- rownames(valid)
-  result
+#' Compute validity matrix
+#'
+#' @param M a matrix containing NAs
+#' @return The validity matrix containing 1 if the element is a NA 0 else.
+#'
+#' @examples
+#' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
+#' validity.matrix(M)
+#' @export
+validity.matrix <- function(M) {
+  matrix(as.numeric(!is.na(M)), nrow = nrow(M)) %>%
+    `rownames<-`(rownames(M)) %>%
+    `colnames<-`(colnames(M))
 }
 
-validity_matrix <- function(in_data){
-  n <- dim(in_data)
-  p <- n[2]
-  n <- n[1]
-  valid <- matrix(as.numeric(!is.na(in_data)), n, p)
-  rownames(valid) <- rownames(in_data)
-  colnames(valid) <- colnames(in_data)
-  valid
+#' Compute validity weight
+#'
+#' @param M a matrix containing NAs
+#' @return a named array containing weights
+#'
+#' @examples
+#' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
+#' validity.weight(M)
+#' @export
+validity.weight <- function(M) {
+    row_sums <- rowSums(
+      matrix(as.numeric(!is.na(M)), nrow = nrow(M)), na.rm = TRUE
+    )
+    result <- row_sums / sum(row_sums)
+    names(result) <- rownames(M)
 }
 
-
-disputedness <- function(in_data, weights=c()) {
-  n = nrow(in_data)
-  p = ncol(in_data)
-  numk = rep(0,p)
-  denk = rep(0,p)
-  out <- lapply(seq(p), function(k) {
-    result = list()
-    not_na <- which(!is.na(in_data[,k]), useNames = FALSE)
-    result$numk <- sum(combn(not_na, 2, function(d) weights[d[1]] * weights[d[2]] * abs(in_data[d[1], k] - in_data[d[2], k])))
-    result$denk <- sum(combn(not_na, 2, function(d) weights[d[1]] * weights[d[2]]))
-    result
-  })
-  print(out)
-  out = do.call(rbind.data.frame, out )
-  result = out$numk/out$denk
-  names(result) <- colnames(in_data)
-  result
-}
-
-
-dissimilarity.renormalised <- function(in_data, disputedness) {
-  n = nrow(in_data)
-  if (is.null(weights)) {
-    weights = rep(1/n, n)
-  }
-  diss <- function(x, y) {
+#' Compute the L1 dissimilarity
+#'
+#' @param M a matrix containing NAs
+#' @return a dissimilarity renormalised by disputedness
+#'
+#' @examples
+#' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
+#' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
+#' dissimilarity.L1(M)
+#' @export
+dissimilarity.L1 <- function(M){
+  n <- nrow(M)
+  diss <- function(i, j) {
+    x <- M[i,]
+    y <- M[j,]
     k <- which(!is.na(x + y))
     ifelse(
       is.null(k),
       NA,
-      sum(disputedness[k] * abs( x[k] - y[k]))/sum(disputedness[k])
+      sum(abs(x[k] - y[k]))/length(k)
     )
   }
-  dr = sapply(1:n, function(i) sapply(1:n, function(j) diss(in_data[i,], in_data[j,])))
-  rownames(dr) <- rownames(in_data)
-  colnames(dr) <- rownames(in_data)
+
+  matrix(do.call(mcmapply, c(diss, unname(expand.grid(seq(n), seq(n))))),
+         nrow = n
+  )
+}
+
+#' Compute column disputedness
+#'
+#' @param M a matrix containing NAs
+#' @param f an array containing weights
+#' @return a named array containing the column disputedness
+#'
+#' @examples
+#' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
+#' disputedness(M)
+#' @export
+disputedness <- function(M, f = NULL) {
+  n <- nrow(M)
+  if (is.null(f)) f <- rep(1/n, n)
+  p <- ncol(M)
+  out <- lapply(seq(p), function(k) {
+    result <- list()
+    not_na <- which(!is.na(M[, k]))
+    result$numk <- sum(
+      combn(
+        not_na, 2,
+        function(d) {
+          f[d[1]] * f[d[2]] * abs(M[d[1], k] - M[d[2], k])
+        }
+      )
+    )
+    result$denk <- sum(
+      combn(not_na, 2, function(d) f[d[1]] * f[d[2]])
+    )
+    result
+  })
+  out <- do.call(rbind.data.frame, out)
+  result <- out$numk / out$denk
+  names(result) <- colnames(M)
+  result
+}
+
+#' Compute the disputedness dissimilarity
+#'
+#' @param M a matrix containing NAs
+#' @param f a named weight array
+#' @param disputedness an array containing column disputedness
+#' @return a dissimilarity renormalised by disputedness
+#'
+#' @examples
+#' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
+#' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
+#' d <- disputedness(M)
+#' dissimilarity.disputedness(M, f, d)
+#' @export
+dissimilarity.disputedness <- function(M, f, disputedness) {
+  n <- nrow(M)
+  if (is.null(weights)) {
+    weights <- rep(1 / n, n)
+  }
+  diss <- function(i, j) {
+    x <- M[i, ]
+    y <- M[j, ]
+    k <- which(!is.na(x + y))
+    ifelse(
+      is.null(k),
+      NA,
+      sum(f[i] * f[j] * disputedness[k] * abs(x[k] - y[k])) / sum(disputedness[k])
+    )
+  }
+  dr <- matrix(
+    do.call(
+      mcmapply,
+      c(diss, unname(expand.grid(seq(n), seq(n))))
+    ),
+    nrow = n
+  )
+  rownames(dr) <- rownames(M)
+  colnames(dr) <- rownames(M)
   dr
 }
 
-
-dissimilarity.tilde_estimation = function(dissimilarity, weights) {
-  n = nrow(dissimilarity)
-  if (is.null(weights)) {
-    weights = rep(1/n, n)
+#' Compute the dissimilarity estimation
+#'
+#' @param D a dissimilarity
+#' @param f a named weight array
+#' @return a dissimilarity estimation
+#'
+#' @examples
+#' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
+#' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
+#' d <- disputedness(M)
+#' D <- dissimilarity.disputedness(M, f, d)
+#' dissimilarity.tilde_estimation(D, f)
+#' @export
+dissimilarity.tilde_estimation <- function(D, f = NULL) {
+  n <- nrow(D)
+  if (is.null(f)) {
+    f <- rep(1 / n, n)
   }
-  diss <- function(x, y) {
+  diss <- function(i, j) {
+    x <- D[i, ]
+    y <- D[j, ]
     k <- which(!is.na(x + y))
     ifelse(
       is.null(k),
       NA,
-      sum(weights[k] * (x[k] - y[k])^2)/sum(weights[k]) - (sum(weights[k] * (x[k] - y[k]))/sum(weights[k]))^2
+      sum(f[k] * (x[k] - y[k])^2) / sum(f[k]) - (sum(f[k] * (x[k] - y[k])) / sum(f[k]))^2
     )
   }
-  dissimilarity_tilde = sapply(1:n, function(i) sapply(1:n, function(j) diss(dissimilarity[i,], dissimilarity[j,])))
-  rownames(dissimilarity_tilde) <- rownames(dissimilarity)
-  colnames(dissimilarity_tilde) <- colnames(dissimilarity)
-  dissimilarity_tilde
-}
-
-
-dissimilarity.regression_estimation <- function(dissimilarity, q) {
-  dm = dissimilarity
-  diag(dm) <- NA
-  y <- vech(sqrt(dissimilarity))
-  dv <- vech(dm)
-  A = lm( y ~ dv - 1)
-  dissimilarity_estimation = sqrt(dissimilarity) / A$coefficients
-  rownames(dissimilarity_estimation) <- rownames(dissimilarity)
-  colnames(dissimilarity_estimation) <- colnames(dissimilarity)
-  dissimilarity_estimation
-}
-
-
-dissimilarity.final <- function(d_estim, dissimilarity) {
-  n = nrow(dissimilarity)
-  dfinal=sapply(1:n, function(i)
-    sapply(1:n, function(j)
-      ifelse(
-        is.na(dissimilarity[i,j]),
-        d_estim[i, j],
-        0.5 * (d_estim[i, j] + dissimilarity[i, j])
-      )
-    )
+  D_tilde <- matrix(
+    do.call(mcmapply, c(diss, unname(expand.grid(seq(n), seq(n))))),
+    nrow = n
   )
-  rownames(dfinal) <- rownames(dissimilarity)
-  colnames(dfinal) <- colnames(dissimilarity)
-  dfinal
+  rownames(D_tilde) <- rownames(D)
+  colnames(D_tilde) <- colnames(D)
+  D_tilde
+}
+
+#' Compute the dissimilarity estimation
+#'
+#' @param D a dissimilarity
+#'
+#' @examples
+#' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
+#' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
+#' d <- disputedness(M)
+#' D <- dissimilarity.disputedness(M, f, d)
+#' D_estim <- dissimilarity.regression_estimation(D)
+#' @export
+dissimilarity.regression_estimation <- function(D) {
+  dm <- D
+  diag(dm) <- NA
+  y <- vech(sqrt(D))
+  dv <- vech(dm)
+  A <- lm(y ~ dv - 1)
+  D_estimation <- sqrt(D) / A$coefficients
+  rownames(D_estimation) <- rownames(D)
+  colnames(D_estimation) <- colnames(D)
+  D_estimation
+}
+
+#' Compute the dissimilarity estimation
+#'
+#' @param D_estim an estimated dissimilarity
+#' @param D a dissimilarity
+#'
+#' @examples
+#' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
+#' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
+#' d <- disputedness(M)
+#' D <- dissimilarity.disputedness(M, f, d)
+#' D_estim <- dissimilarity.regression_estimation(D)
+#' @export
+dissimilarity.final <- function(D_estim, D) {
+  n <- nrow(D)
+  diss <- function(i, j) {
+    ifelse(
+      is.na(D[i, j]),
+      D_estim[i, j],
+      0.5 * (D_estim[i, j] + D[i, j])
+    )
+  }
+  D_final <- matrix(
+    do.call(
+      mcmapply,
+      c(diss, unname(expand.grid(seq(n), seq(n))))
+    ),
+    nrow = n
+  )
+  rownames(D_final) <- rownames(D)
+  colnames(D_final) <- colnames(D)
+  D_final
+}
+
+#' Compute the distance estimation
+#'
+#' @param M a matrix
+#' @param f a named weight array
+#' @return a dissimilarity estimation
+#'
+#' @examples
+#' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
+#' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
+#' D <- estimate.distance(M, f)
+#' @export
+estimate.distance <- function(M, f) {
+  disp <- disputedness(M,f)
+  D_disp <- dissimilarity.disputedness(M, f, disp)
+  dtilde <- dissimilarity.tilde_estimation(D_disp, f)
+  D_estim <- dissimilarity.regression_estimation(dtilde)
+  dissimilarity.final(D_estim, D_disp)
 }

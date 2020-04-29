@@ -1,4 +1,3 @@
-
 sphere_vertices_distance <- function() {
 
   sphere_vertices <- function(xc = 0,
