@@ -4,12 +4,14 @@
 \alias{estimate.distance}
 \title{Compute the distance estimation}
 \usage{
-estimate.distance(M, f)
+estimate.distance(M, f, disp = NULL)
 }
 \arguments{
 \item{M}{a matrix}
 
 \item{f}{a named weight array}
+
+\item{disp}{disputedness}
 }
 \value{
 a dissimilarity estimation

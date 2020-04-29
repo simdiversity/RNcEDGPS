@@ -105,6 +105,7 @@ disputedness <- function(M, f = NULL) {
   })
   options(opts)
   out <- do.call(rbind.data.frame, out)
+
   result <- out$numk / out$denk
   names(result) <- colnames(M)
   result
@@ -256,6 +257,7 @@ dissimilarity.final <- function(D_estim, D) {
 #'
 #' @param M a matrix
 #' @param f a named weight array
+#' @param disp disputedness
 #' @return a dissimilarity estimation
 #'
 #' @examples
@@ -263,8 +265,8 @@ dissimilarity.final <- function(D_estim, D) {
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
 #' D <- estimate.distance(M, f)
 #' @export
-estimate.distance <- function(M, f) {
-  disp <- disputedness(M,f)
+estimate.distance <- function(M, f, disp=NULL) {
+  if (is.null(disp)) disp <- disputedness(M,f)
   D_disp <- dissimilarity.disputedness(M, f, disp)
   dtilde <- dissimilarity.tilde_estimation(D_disp, f)
   D_estim <- dissimilarity.regression_estimation(dtilde)
