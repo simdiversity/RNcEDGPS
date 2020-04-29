@@ -5,7 +5,6 @@
 #' @importFrom parallel mcmapply
 #'
 NULL
-
 #' Compute validity matrix
 #'
 #' @param M a matrix containing NAs
@@ -60,10 +59,15 @@ dissimilarity.L1 <- function(M){
       sum(abs(x[k] - y[k]))/length(k)
     )
   }
-
-  matrix(do.call(mcmapply, c(diss, unname(expand.grid(seq(n), seq(n))))),
-         nrow = n
+  opts <- options(mccores = parallel::detectCores())
+  matrix(
+    do.call(
+      parallel::mcmapply,
+      c(diss, unname(expand.grid(seq(n), seq(n))))
+    ),
+    nrow = n
   )
+  options(opts)
 }
 
 #' Compute column disputedness
@@ -80,7 +84,9 @@ disputedness <- function(M, f = NULL) {
   n <- nrow(M)
   if (is.null(f)) f <- rep(1/n, n)
   p <- ncol(M)
-  out <- lapply(seq(p), function(k) {
+  ks <- seq(p)
+  opts <- options(mccores = parallel::detectCores())
+  out <- parallel::mclapply(ks, function(k) {
     result <- list()
     not_na <- which(!is.na(M[, k]))
     result$numk <- sum(
@@ -96,6 +102,7 @@ disputedness <- function(M, f = NULL) {
     )
     result
   })
+  options(opts)
   out <- do.call(rbind.data.frame, out)
   result <- out$numk / out$denk
   names(result) <- colnames(M)
@@ -130,13 +137,15 @@ dissimilarity.disputedness <- function(M, f, disputedness) {
       sum(f[i] * f[j] * disputedness[k] * abs(x[k] - y[k])) / sum(disputedness[k])
     )
   }
+  opts <- options(mccores = parallel::detectCores())
   dr <- matrix(
     do.call(
-      mcmapply,
+      parallel::mcmapply,
       c(diss, unname(expand.grid(seq(n), seq(n))))
     ),
     nrow = n
   )
+  options(opts)
   rownames(dr) <- rownames(M)
   colnames(dr) <- rownames(M)
   dr
@@ -170,10 +179,15 @@ dissimilarity.tilde_estimation <- function(D, f = NULL) {
       sum(f[k] * (x[k] - y[k])^2) / sum(f[k]) - (sum(f[k] * (x[k] - y[k])) / sum(f[k]))^2
     )
   }
+  opts <- options(mccores = parallel::detectCores())
   D_tilde <- matrix(
-    do.call(mcmapply, c(diss, unname(expand.grid(seq(n), seq(n))))),
+    do.call(
+      parallel::mcmapply,
+      c(diss, unname(expand.grid(seq(n), seq(n))))
+    ),
     nrow = n
   )
+  options(opts)
   rownames(D_tilde) <- rownames(D)
   colnames(D_tilde) <- colnames(D)
   D_tilde
@@ -223,13 +237,15 @@ dissimilarity.final <- function(D_estim, D) {
       0.5 * (D_estim[i, j] + D[i, j])
     )
   }
+  opts <- options(mccores = parallel::detectCores())
   D_final <- matrix(
     do.call(
-      mcmapply,
+      parallel::mcmapply,
       c(diss, unname(expand.grid(seq(n), seq(n))))
     ),
     nrow = n
   )
+  options(opts)
   rownames(D_final) <- rownames(D)
   colnames(D_final) <- colnames(D)
   D_final
@@ -253,3 +269,4 @@ estimate.distance <- function(M, f) {
   D_estim <- dissimilarity.regression_estimation(dtilde)
   dissimilarity.final(D_estim, D_disp)
 }
+
