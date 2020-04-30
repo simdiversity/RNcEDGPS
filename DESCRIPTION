@@ -3,13 +3,17 @@ Type: Package
 Title: Nonconvex Euclidean Distance Geometry Problem Solvers
 Version: 1.0
 Date: 2020-04-27
-Author: Mattia Egloff <megloff1@unil.ch> and Fran\\u00e7ois Bavaud <fbavaud@unil.ch>
+Authors@R: person("Mattia", "Egloff", email = "megloff1@unil.ch",
+                  role = c("aut", "cre"))
+            person("Fran\\u00e7ois", "Bavaud", email = "fbavaud@unil.ch",
+                  role = c("aut", "cre", "cph"))
+Authors: Mattia Egloff and Fran\\u00e7ois Bavaud
 Maintainer: Mattia Egloff <megloff1@unil.ch>
-Description: The package contains solvers for the nonconvex euclidian distance 
+Description: The package contains solvers for the nonconvex euclidian distance
     geometry problem.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Depends: 
+Depends:
     R (>= 2.10)
 RoxygenNote: 7.1.0
 Imports:
