@@ -13,8 +13,11 @@ Description: The package contains solvers for the nonconvex euclidian distance
     geometry problem.
 License: MIT + file LICENSE
 Encoding: UTF-8
+Suggests: 
+  lintr,
+  testthat,
 Depends:
-    R (>= 2.10)
+  R (>= 2.10)
 RoxygenNote: 7.1.0
 Imports:
   Rcpp (>= 1.0.4),
