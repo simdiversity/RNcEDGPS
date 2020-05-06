@@ -1,13 +1,11 @@
 sphere_vertices_distance <- function() {
-
   sphere_vertices <- function(xc = 0,
                               yc = 0,
                               zc = 0,
                               r = 1,
                               lats = 16L,
                               longs = 16L,
-                              ...
-                              ) {
+                              ...) {
     # xc,yc,zc give centre of sphere, r is radius, lats/longs for resolution
     vertices <- vector(mode = "numeric", length = 12L * lats * longs)
     vi <- 1L

@@ -40,12 +40,12 @@ validity_matrix <- function(M) {
 #' validity_weight(M)
 #' @export
 validity_weight <- function(M) {
-    row_sums <- rowSums(
-      validity_matrix(M)
-    )
-    result <- row_sums / sum(row_sums)
-    names(result) <- rownames(M)
-    result
+  row_sums <- rowSums(
+    validity_matrix(M)
+  )
+  result <- row_sums / sum(row_sums)
+  names(result) <- rownames(M)
+  result
 }
 
 #' Compute the L1 dissimilarity
@@ -112,8 +112,7 @@ disputedness <- function(M, f = NULL) {
       combn(not_na, 2, function(d) f[d[1]] * f[d[2]])
     )
     result
-  }
-  )
+  })
   options(opts)
   out <- do.call(rbind.data.frame, out)
 
@@ -148,8 +147,8 @@ dissimilarity_disputedness <- function(M, f, disputedness) {
       is.null(k),
       NA,
       sum(
-        f[i] * f[j] * disputedness[k] * abs(x[k] - y[k])) / sum(disputedness[k]
-      )
+        f[i] * f[j] * disputedness[k] * abs(x[k] - y[k])
+      ) / sum(disputedness[k])
     )
   }
   opts <- options(mc.cores = num_workers)
@@ -192,8 +191,8 @@ dissimilarity_tilde_estimation <- function(D, f = NULL) {
       is.null(k),
       NA,
       sum(
-        f[k] * (x[k] - y[k])^2) / sum(f[k]) - (sum(f[k] * (x[k] - y[k])
-      ) / sum(f[k]))^2
+        f[k] * (x[k] - y[k])^2
+      ) / sum(f[k]) - (sum(f[k] * (x[k] - y[k])) / sum(f[k]))^2
     )
   }
   opts <- options(mc.cores = num_workers)
@@ -281,7 +280,7 @@ dissimilarity_final <- function(D_estim, D) {
 #' d <- disputedness(M)
 #' D <- estimate_distance(M, f, d)
 #' @export
-estimate_distance <- function(M, f, disp=NULL) {
+estimate_distance <- function(M, f, disp = NULL) {
   if (is.null(disp)) disp <- disputedness(M, f)
   D_disp <- dissimilarity_disputedness(M, f, disp)
   dtilde <- dissimilarity_tilde_estimation(D_disp, f)
