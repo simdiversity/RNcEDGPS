@@ -1,7 +1,7 @@
 # RNcEDGPS
 ## Nonconvex Euclidean Distance Geometry Problem Solvers
 
-  [![Codecov test coverage](https://codecov.io/gh/simdiversity/RNcEDGPS/branch/master/graph/badge.svg)](https://codecov.io/gh/simdiversity/RNcEDGPS?branch=master)
+![test-coverage](https://github.com/simdiversity/RNcEDGPS/workflows/test-coverage/badge.svg)
   [![R build status](https://github.com/simdiversity/RNcEDGPS/workflows/R-CMD-check/badge.svg)](https://github.com/simdiversity/RNcEDGPS/actions)
 
 
