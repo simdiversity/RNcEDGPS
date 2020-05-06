@@ -1,10 +1,20 @@
 #' @import magrittr
+#' @import parallel
 #' @importFrom stats dist lm
 #' @importFrom utils combn
 #' @importFrom matrixcalc vech
-#' @importFrom parallel mcmapply
-#'
 NULL
+
+chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+
+if (nzchar(chk) && chk == "TRUE") {
+  # use 2 cores in CRAN/Travis/AppVeyor
+  num_workers <- 2L
+} else {
+  # use all cores in devtools::test()
+  num_workers <- parallel::detectCores()
+}
+
 #' Compute validity matrix
 #'
 #' @param M a matrix containing NAs
@@ -12,9 +22,9 @@ NULL
 #'
 #' @examples
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-#' validity.matrix(M)
+#' validity_matrix(M)
 #' @export
-validity.matrix <- function(M) {
+validity_matrix <- function(M) {
   matrix(as.numeric(!is.na(M)), nrow = nrow(M)) %>%
     `rownames<-`(rownames(M)) %>%
     `colnames<-`(colnames(M))
@@ -27,11 +37,11 @@ validity.matrix <- function(M) {
 #'
 #' @examples
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-#' validity.weight(M)
+#' validity_weight(M)
 #' @export
-validity.weight <- function(M) {
+validity_weight <- function(M) {
     row_sums <- rowSums(
-      validity.matrix(M)
+      validity_matrix(M)
     )
     result <- row_sums / sum(row_sums)
     names(result) <- rownames(M)
@@ -46,21 +56,21 @@ validity.weight <- function(M) {
 #' @examples
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
-#' dissimilarity.L1(M)
+#' dissimilarity_L1(M)
 #' @export
-dissimilarity.L1 <- function(M){
+dissimilarity_L1 <- function(M) {
   n <- nrow(M)
   diss <- function(i, j) {
-    x <- M[i,]
-    y <- M[j,]
+    x <- M[i, ]
+    y <- M[j, ]
     k <- which(!is.na(x + y))
     ifelse(
       is.null(k),
       NA,
-      sum(abs(x[k] - y[k]))/length(k)
+      sum(abs(x[k] - y[k])) / length(k)
     )
   }
-  opts <- options(mccores = parallel::detectCores())
+  opts <- options(mc.cores = num_workers)
   matrix(
     do.call(
       parallel::mcmapply,
@@ -83,10 +93,10 @@ dissimilarity.L1 <- function(M){
 #' @export
 disputedness <- function(M, f = NULL) {
   n <- nrow(M)
-  if (is.null(f)) f <- rep(1/n, n)
+  if (is.null(f)) f <- rep(1 / n, n)
   p <- ncol(M)
   ks <- seq(p)
-  opts <- options(mccores = parallel::detectCores())
+  opts <- options(mc.cores = num_workers)
   out <- parallel::mclapply(ks, function(k) {
     result <- list()
     not_na <- which(!is.na(M[, k]))
@@ -102,7 +112,8 @@ disputedness <- function(M, f = NULL) {
       combn(not_na, 2, function(d) f[d[1]] * f[d[2]])
     )
     result
-  })
+  }
+  )
   options(opts)
   out <- do.call(rbind.data.frame, out)
 
@@ -122,9 +133,9 @@ disputedness <- function(M, f = NULL) {
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
 #' d <- disputedness(M)
-#' dissimilarity.disputedness(M, f, d)
+#' dissimilarity_disputedness(M, f, d)
 #' @export
-dissimilarity.disputedness <- function(M, f, disputedness) {
+dissimilarity_disputedness <- function(M, f, disputedness) {
   n <- nrow(M)
   if (is.null(weights)) {
     weights <- rep(1 / n, n)
@@ -136,10 +147,12 @@ dissimilarity.disputedness <- function(M, f, disputedness) {
     ifelse(
       is.null(k),
       NA,
-      sum(f[i] * f[j] * disputedness[k] * abs(x[k] - y[k])) / sum(disputedness[k])
+      sum(
+        f[i] * f[j] * disputedness[k] * abs(x[k] - y[k])) / sum(disputedness[k]
+      )
     )
   }
-  opts <- options(mccores = parallel::detectCores())
+  opts <- options(mc.cores = num_workers)
   dr <- matrix(
     do.call(
       parallel::mcmapply,
@@ -163,10 +176,10 @@ dissimilarity.disputedness <- function(M, f, disputedness) {
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
 #' d <- disputedness(M)
-#' D <- dissimilarity.disputedness(M, f, d)
-#' dissimilarity.tilde_estimation(D, f)
+#' D <- dissimilarity_disputedness(M, f, d)
+#' dissimilarity_tilde_estimation(D, f)
 #' @export
-dissimilarity.tilde_estimation <- function(D, f = NULL) {
+dissimilarity_tilde_estimation <- function(D, f = NULL) {
   n <- nrow(D)
   if (is.null(f)) {
     f <- rep(1 / n, n)
@@ -178,10 +191,12 @@ dissimilarity.tilde_estimation <- function(D, f = NULL) {
     ifelse(
       is.null(k),
       NA,
-      sum(f[k] * (x[k] - y[k])^2) / sum(f[k]) - (sum(f[k] * (x[k] - y[k])) / sum(f[k]))^2
+      sum(
+        f[k] * (x[k] - y[k])^2) / sum(f[k]) - (sum(f[k] * (x[k] - y[k])
+      ) / sum(f[k]))^2
     )
   }
-  opts <- options(mccores = parallel::detectCores())
+  opts <- options(mc.cores = num_workers)
   D_tilde <- matrix(
     do.call(
       parallel::mcmapply,
@@ -203,15 +218,15 @@ dissimilarity.tilde_estimation <- function(D, f = NULL) {
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
 #' d <- disputedness(M)
-#' D <- dissimilarity.disputedness(M, f, d)
-#' D_estim <- dissimilarity.regression_estimation(D)
+#' D <- dissimilarity_disputedness(M, f, d)
+#' D_estim <- dissimilarity_regression_estimation(D)
 #' @export
-dissimilarity.regression_estimation <- function(D) {
+dissimilarity_regression_estimation <- function(D) {
   dm <- D
   diag(dm) <- NA
   y <- vech(sqrt(D))
   dv <- vech(dm)
-  A <- lm(y ~ dv - 1)
+  A <- stats::lm(y ~ dv - 1)
   D_estimation <- sqrt(D) / A$coefficients
   rownames(D_estimation) <- rownames(D)
   colnames(D_estimation) <- colnames(D)
@@ -227,10 +242,10 @@ dissimilarity.regression_estimation <- function(D) {
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
 #' d <- disputedness(M)
-#' D <- dissimilarity.disputedness(M, f, d)
-#' D_estim <- dissimilarity.regression_estimation(D)
+#' D <- dissimilarity_disputedness(M, f, d)
+#' D_estim <- dissimilarity_regression_estimation(D)
 #' @export
-dissimilarity.final <- function(D_estim, D) {
+dissimilarity_final <- function(D_estim, D) {
   n <- nrow(D)
   diss <- function(i, j) {
     ifelse(
@@ -239,7 +254,7 @@ dissimilarity.final <- function(D_estim, D) {
       0.5 * (D_estim[i, j] + D[i, j])
     )
   }
-  opts <- options(mccores = parallel::detectCores())
+  opts <- options(mc.cores = num_workers)
   D_final <- matrix(
     do.call(
       parallel::mcmapply,
@@ -263,13 +278,13 @@ dissimilarity.final <- function(D_estim, D) {
 #' @examples
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
-#' D <- estimate.distance(M, f)
+#' d <- disputedness(M)
+#' D <- estimate_distance(M, f, d)
 #' @export
-estimate.distance <- function(M, f, disp=NULL) {
-  if (is.null(disp)) disp <- disputedness(M,f)
-  D_disp <- dissimilarity.disputedness(M, f, disp)
-  dtilde <- dissimilarity.tilde_estimation(D_disp, f)
-  D_estim <- dissimilarity.regression_estimation(dtilde)
-  dissimilarity.final(D_estim, D_disp)
+estimate_distance <- function(M, f, disp=NULL) {
+  if (is.null(disp)) disp <- disputedness(M, f)
+  D_disp <- dissimilarity_disputedness(M, f, disp)
+  dtilde <- dissimilarity_tilde_estimation(D_disp, f)
+  D_estim <- dissimilarity_regression_estimation(dtilde)
+  dissimilarity_final(D_estim, D_disp)
 }
-

@@ -22,5 +22,6 @@ Compute the distance estimation
 \examples{
 M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
-D <- estimate.distance(M, f)
+d <- disputedness(M)
+D <- estimate.distance(M, f, d)
 }
