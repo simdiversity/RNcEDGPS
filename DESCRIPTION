@@ -1,26 +1,30 @@
-Package: simdiversity.RNcEDGPS
 Type: Package
+Package: simdiversity.RNcEDGPS
 Title: Nonconvex Euclidean Distance Geometry Problem Solvers
 Version: 1.0
 Date: 2020-04-27
-Authors@R: person("Mattia", "Egloff", email = "megloff1@unil.ch",
-                  role = c("aut", "cre"))
-            person("Fran\\u00e7ois", "Bavaud", email = "fbavaud@unil.ch",
-                  role = c("aut", "cre", "cph"))
-Authors: Mattia Egloff and Fran\\u00e7ois Bavaud
+Authors@R: 
+    person(given = "Fran\\u00e7ois",
+           family = "Bavaud",
+           role = c("aut", "cre", "cph"),
+           email = "fbavaud@unil.ch")
 Maintainer: Mattia Egloff <megloff1@unil.ch>
-Description: The package contains solvers for the nonconvex euclidian distance
-    geometry problem.
+Description: The package contains solvers for the nonconvex
+    euclidian distance geometry problem.
 License: MIT + file LICENSE
-Encoding: UTF-8
-Suggests: 
-  lintr,
-  testthat,
 Depends:
-  R (>= 2.10)
-RoxygenNote: 7.1.0
+    R (>= 2.10)
 Imports:
-  Rcpp (>= 1.0.4),
-  parallel,
-  matrixcalc,
-  magrittr
+    magrittr,
+    matrixcalc,
+    parallel,
+    Rcpp (>= 1.0.4),
+    rlang (>= 0.1.2)
+Suggests: 
+    lintr,
+    testthat,
+    covr,
+    roxygen2
+Authors: Mattia Egloff and Fran\\u00e7ois Bavaud
+Encoding: UTF-8
+RoxygenNote: 7.1.0
