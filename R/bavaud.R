@@ -121,6 +121,35 @@ disputedness <- function(M, f = NULL) {
   result
 }
 
+
+disputedness <- function(M, f = NULL) {
+  n <- nrow(M)
+  if (is.null(f)) f <- rep(1 / n, n)
+  p <- ncol(M)
+  ks <- seq(p)
+  opts <- options(mc.cores = num_workers)
+  compute_num <- function(d, k) {
+    f[d[1]] * f[d[2]] * abs(M[d[1], k] - M[d[2], k])
+  }
+  compute_den <- function(d) {
+    f[d[1]] * f[d[2]]
+  }
+  denk_numk <- function(k) {
+    not_na <- which(!is.na(M[, k]))
+    dens = combn(not_na, 2, compute_den)
+    list(
+      numk = sum(dens * combn(not_na, 2, compute_num, k = k )),
+      denk = sum(dens)
+    )
+  }
+  out <- do.call(rbind.data.frame, parallel::mclapply(ks, denk_numk))
+  options(opts)
+
+  result <- out$numk / out$denk
+  names(result) <- colnames(M)
+  result
+}
+
 #' Compute the disputedness dissimilarity
 #'
 #' @param M a matrix containing NAs
