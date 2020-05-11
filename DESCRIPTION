@@ -22,6 +22,8 @@ Imports:
     rlang (>= 0.1.2),
     RcppAlgos,
     BB
+
+>>>>>>> rcppalgos
 Suggests: 
     lintr,
     testthat,
