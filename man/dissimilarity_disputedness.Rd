@@ -4,14 +4,14 @@
 \alias{dissimilarity_disputedness}
 \title{Compute the disputedness dissimilarity}
 \usage{
-dissimilarity_disputedness(M, f, disputedness)
+dissimilarity_disputedness(M, f, disp)
 }
 \arguments{
 \item{M}{a matrix containing NAs}
 
 \item{f}{a named weight array}
 
-\item{disputedness}{an array containing column disputedness}
+\item{disp}{an array containing column disputedness}
 }
 \value{
 a dissimilarity renormalised by disputedness
@@ -22,6 +22,6 @@ Compute the disputedness dissimilarity
 \examples{
 M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
-d <- disputedness(M)
-dissimilarity_disputedness(M, f, d)
+disp <- disputedness(M)
+dissimilarity_disputedness(M, f,disp)
 }

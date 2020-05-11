@@ -20,7 +20,7 @@ Compute the dissimilarity estimation
 \examples{
 M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
-d <- disputedness(M)
-D <- dissimilarity_disputedness(M, f, d)
+disp <- disputedness(M)
+D <- dissimilarity_disputedness(M, f, disp)
 dissimilarity_tilde_estimation(D, f)
 }

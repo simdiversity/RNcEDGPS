@@ -19,7 +19,9 @@ Imports:
     matrixcalc,
     parallel,
     Rcpp (>= 1.0.4),
-    rlang (>= 0.1.2)
+    rlang (>= 0.1.2),
+    BB,
+    RcppAlgos
 Suggests: 
     lintr,
     testthat,

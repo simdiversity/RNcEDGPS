@@ -17,6 +17,5 @@ Compute the L1 dissimilarity
 }
 \examples{
 M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
 dissimilarity_L1(M)
 }

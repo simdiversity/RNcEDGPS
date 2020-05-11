@@ -19,5 +19,6 @@ Compute column disputedness
 }
 \examples{
 M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-disputedness(M)
+f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
+disputedness(M,f)
 }

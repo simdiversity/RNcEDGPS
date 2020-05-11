@@ -3,6 +3,7 @@
 #' @importFrom stats dist lm
 #' @importFrom utils combn
 #' @importFrom matrixcalc vech
+#' @importFrom RcppAlgos permuteGeneral comboGeneral
 NULL
 
 chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
@@ -55,12 +56,13 @@ validity_weight <- function(M) {
 #'
 #' @examples
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-#' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
 #' dissimilarity_L1(M)
 #' @export
 dissimilarity_L1 <- function(M) {
   n <- nrow(M)
-  diss <- function(i, j) {
+  diss <- function(ij) {
+    i <- ij[1]
+    j <- ij[2]
     x <- M[i, ]
     y <- M[j, ]
     k <- which(!is.na(x + y))
@@ -70,15 +72,10 @@ dissimilarity_L1 <- function(M) {
       sum(abs(x[k] - y[k])) / length(k)
     )
   }
-  opts <- options(mc.cores = num_workers)
-  matrix(
-    do.call(
-      parallel::mcmapply,
-      c(diss, unname(expand.grid(seq(n), seq(n))))
-    ),
-    nrow = n
-  )
-  options(opts)
+
+  matrix(unlist(RcppAlgos::permuteGeneral(
+    c(seq(n)),2, FUN = diss, repetition = TRUE)),
+  nrow = n)
 }
 
 #' Compute column disputedness
@@ -89,31 +86,32 @@ dissimilarity_L1 <- function(M) {
 #'
 #' @examples
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-#' disputedness(M)
+#' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
+#' disputedness(M,f)
 #' @export
 disputedness <- function(M, f = NULL) {
   n <- nrow(M)
   if (is.null(f)) f <- rep(1 / n, n)
   p <- ncol(M)
   ks <- seq(p)
-  opts <- options(mc.cores = num_workers)
-  out <- parallel::mclapply(ks, function(k) {
+  out <- lapply(ks, function(k) {
     result <- list()
     not_na <- which(!is.na(M[, k]))
-    result$numk <- sum(
-      combn(
+    result$numk <- sum(unlist(
+      RcppAlgos::comboGeneral(
         not_na, 2,
-        function(d) {
+        FUN = function(d) {
           f[d[1]] * f[d[2]] * abs(M[d[1], k] - M[d[2], k])
         }
-      )
+      ))
     )
-    result$denk <- sum(
-      combn(not_na, 2, function(d) f[d[1]] * f[d[2]])
+    result$denk <- sum(unlist(
+      RcppAlgos::comboGeneral(not_na, 2, FUN = function(d) f[d[1]] * f[d[2]])
     )
+    )
+
     result
   })
-  options(opts)
   out <- do.call(rbind.data.frame, out)
 
   result <- out$numk / out$denk
@@ -122,53 +120,27 @@ disputedness <- function(M, f = NULL) {
 }
 
 
-disputedness <- function(M, f = NULL) {
-  n <- nrow(M)
-  if (is.null(f)) f <- rep(1 / n, n)
-  p <- ncol(M)
-  ks <- seq(p)
-  opts <- options(mc.cores = num_workers)
-  compute_num <- function(d, k) {
-    f[d[1]] * f[d[2]] * abs(M[d[1], k] - M[d[2], k])
-  }
-  compute_den <- function(d) {
-    f[d[1]] * f[d[2]]
-  }
-  denk_numk <- function(k) {
-    not_na <- which(!is.na(M[, k]))
-    dens = combn(not_na, 2, compute_den)
-    list(
-      numk = sum(dens * combn(not_na, 2, compute_num, k = k )),
-      denk = sum(dens)
-    )
-  }
-  out <- do.call(rbind.data.frame, parallel::mclapply(ks, denk_numk))
-  options(opts)
-
-  result <- out$numk / out$denk
-  names(result) <- colnames(M)
-  result
-}
-
 #' Compute the disputedness dissimilarity
 #'
 #' @param M a matrix containing NAs
 #' @param f a named weight array
-#' @param disputedness an array containing column disputedness
+#' @param disp an array containing column disputedness
 #' @return a dissimilarity renormalised by disputedness
 #'
 #' @examples
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
-#' d <- disputedness(M)
-#' dissimilarity_disputedness(M, f, d)
+#' disp <- disputedness(M)
+#' dissimilarity_disputedness(M, f,disp)
 #' @export
-dissimilarity_disputedness <- function(M, f, disputedness) {
+dissimilarity_disputedness <- function(M, f, disp) {
   n <- nrow(M)
   if (is.null(weights)) {
     weights <- rep(1 / n, n)
   }
-  diss <- function(i, j) {
+  diss <- function(ij) {
+    i <- ij[1]
+    j <- ij[2]
     x <- M[i, ]
     y <- M[j, ]
     k <- which(!is.na(x + y))
@@ -176,19 +148,15 @@ dissimilarity_disputedness <- function(M, f, disputedness) {
       is.null(k),
       NA,
       sum(
-        f[i] * f[j] * disputedness[k] * abs(x[k] - y[k])
-      ) / sum(disputedness[k])
+        f[i] * f[j] * disp[k] * abs(x[k] - y[k])
+      ) / sum(disp[k])
     )
   }
-  opts <- options(mc.cores = num_workers)
-  dr <- matrix(
-    do.call(
-      parallel::mcmapply,
-      c(diss, unname(expand.grid(seq(n), seq(n))))
-    ),
-    nrow = n
-  )
-  options(opts)
+
+    dr <- matrix(unlist(RcppAlgos::permuteGeneral(
+    c(seq(n)), 2, FUN = diss, repetition = TRUE)),
+    nrow = n)
+
   rownames(dr) <- rownames(M)
   colnames(dr) <- rownames(M)
   dr
@@ -203,8 +171,8 @@ dissimilarity_disputedness <- function(M, f, disputedness) {
 #' @examples
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
-#' d <- disputedness(M)
-#' D <- dissimilarity_disputedness(M, f, d)
+#' disp <- disputedness(M)
+#' D <- dissimilarity_disputedness(M, f, disp)
 #' dissimilarity_tilde_estimation(D, f)
 #' @export
 dissimilarity_tilde_estimation <- function(D, f = NULL) {
@@ -212,7 +180,9 @@ dissimilarity_tilde_estimation <- function(D, f = NULL) {
   if (is.null(f)) {
     f <- rep(1 / n, n)
   }
-  diss <- function(i, j) {
+  diss <- function(ij) {
+    i <- ij[1]
+    j <- ij[2]
     x <- D[i, ]
     y <- D[j, ]
     k <- which(!is.na(x + y))
@@ -224,15 +194,10 @@ dissimilarity_tilde_estimation <- function(D, f = NULL) {
       ) / sum(f[k]) - (sum(f[k] * (x[k] - y[k])) / sum(f[k]))^2
     )
   }
-  opts <- options(mc.cores = num_workers)
-  D_tilde <- matrix(
-    do.call(
-      parallel::mcmapply,
-      c(diss, unname(expand.grid(seq(n), seq(n))))
-    ),
-    nrow = n
-  )
-  options(opts)
+  D_tilde <- matrix(unlist(RcppAlgos::permuteGeneral(
+    c(seq(n)),2, FUN = diss, repetition = TRUE)),
+    nrow = n)
+
   rownames(D_tilde) <- rownames(D)
   colnames(D_tilde) <- colnames(D)
   D_tilde
@@ -275,22 +240,21 @@ dissimilarity_regression_estimation <- function(D) {
 #' @export
 dissimilarity_final <- function(D_estim, D) {
   n <- nrow(D)
-  diss <- function(i, j) {
+  diss <- function(ij) {
+    i <- ij[1]
+    j <- ij[2]
     ifelse(
       is.na(D[i, j]),
       D_estim[i, j],
       0.5 * (D_estim[i, j] + D[i, j])
     )
   }
-  opts <- options(mc.cores = num_workers)
-  D_final <- matrix(
-    do.call(
-      parallel::mcmapply,
-      c(diss, unname(expand.grid(seq(n), seq(n))))
-    ),
-    nrow = n
-  )
-  options(opts)
+
+  D_final <- matrix(unlist(RcppAlgos::permuteGeneral(
+    c(seq(n)),2, FUN = diss, repetition = TRUE)),
+    nrow = n)
+
+
   rownames(D_final) <- rownames(D)
   colnames(D_final) <- colnames(D)
   D_final
