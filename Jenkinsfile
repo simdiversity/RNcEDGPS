@@ -3,11 +3,13 @@ pipeline {
   stages {
     stage('Build') {
       steps {
+	sh 'make install_deps'
         sh 'make build'
       }
     }
     stage('Check') {
       steps {
+	sh 'make install_deps'
         sh  'make check'
       }
     }
