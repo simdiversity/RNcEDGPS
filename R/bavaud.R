@@ -3,7 +3,7 @@
 #' @importFrom stats dist lm
 #' @importFrom utils combn
 #' @importFrom matrixcalc vech
-#' @importFrom RcppAlgos permuteGeneral comboGeneral
+#' @importFrom RcppAlgos permuteGeneral comboGeneral stdThreadMax
 NULL
 
 chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
@@ -13,7 +13,7 @@ if (nzchar(chk) && chk == "TRUE") {
   num_workers <- 2L
 } else {
   # use all cores in devtools::test()
-  num_workers <- parallel::detectCores()
+  num_workers <- RcppAlgos::stdThreadMax()
 }
 
 #' Compute validity matrix
@@ -74,7 +74,8 @@ dissimilarity_L1 <- function(M) {
   }
 
   matrix(unlist(RcppAlgos::permuteGeneral(
-    c(seq(n)),2, FUN = diss, repetition = TRUE, Parallel = TRUE)),
+    c(seq(n)),2, FUN = diss, repetition = TRUE,
+    Parallel = TRUE, nThreads =num_workers)),
   nrow = n)
 }
 
@@ -103,12 +104,12 @@ disputedness <- function(M, f = NULL) {
         FUN = function(d) {
           f[d[1]] * f[d[2]] * abs(M[d[1], k] - M[d[2], k])
         },
-        Parallel = TRUE
+        Parallel = TRUE, nThreads =num_workers
       ))
     )
     result$denk <- sum(unlist(
       RcppAlgos::comboGeneral(not_na, 2, FUN = function(d) {f[d[1]] * f[d[2]]},
-                              Parallel = TRUE)
+                              Parallel = TRUE, nThreads =num_workers)
     )
     )
 
@@ -156,7 +157,8 @@ dissimilarity_disputedness <- function(M, f, disp) {
   }
 
     dr <- matrix(unlist(RcppAlgos::permuteGeneral(
-    c(seq(n)), 2, FUN = diss, repetition = TRUE, Parallel = TRUE)),
+    c(seq(n)), 2, FUN = diss, repetition = TRUE,
+    Parallel = TRUE, nThreads =num_workers)),
     nrow = n)
 
   rownames(dr) <- rownames(M)
@@ -197,7 +199,8 @@ dissimilarity_tilde_estimation <- function(D, f = NULL) {
     )
   }
   D_tilde <- matrix(unlist(RcppAlgos::permuteGeneral(
-    c(seq(n)),2, FUN = diss, repetition = TRUE, Parallel = TRUE)),
+    c(seq(n)),2, FUN = diss, repetition = TRUE,
+    Parallel = TRUE, nThreads =num_workers)),
     nrow = n)
 
   rownames(D_tilde) <- rownames(D)
@@ -253,7 +256,8 @@ dissimilarity_final <- function(D_estim, D) {
   }
 
   D_final <- matrix(unlist(RcppAlgos::permuteGeneral(
-    c(seq(n)),2, FUN = diss, repetition = TRUE, Parallel = TRUE)),
+    c(seq(n)),2, FUN = diss, repetition = TRUE,
+    Parallel = TRUE, nThreads =num_workers)),
     nrow = n)
 
 
