@@ -74,7 +74,7 @@ dissimilarity_L1 <- function(M) {
   }
 
   matrix(unlist(RcppAlgos::permuteGeneral(
-    c(seq(n)),2, FUN = diss, repetition = TRUE)),
+    c(seq(n)),2, FUN = diss, repetition = TRUE, Parallel = TRUE)),
   nrow = n)
 }
 
@@ -102,11 +102,13 @@ disputedness <- function(M, f = NULL) {
         not_na, 2,
         FUN = function(d) {
           f[d[1]] * f[d[2]] * abs(M[d[1], k] - M[d[2], k])
-        }
+        },
+        Parallel = TRUE
       ))
     )
     result$denk <- sum(unlist(
-      RcppAlgos::comboGeneral(not_na, 2, FUN = function(d) f[d[1]] * f[d[2]])
+      RcppAlgos::comboGeneral(not_na, 2, FUN = function(d) {f[d[1]] * f[d[2]]},
+                              Parallel = TRUE)
     )
     )
 
@@ -154,7 +156,7 @@ dissimilarity_disputedness <- function(M, f, disp) {
   }
 
     dr <- matrix(unlist(RcppAlgos::permuteGeneral(
-    c(seq(n)), 2, FUN = diss, repetition = TRUE)),
+    c(seq(n)), 2, FUN = diss, repetition = TRUE, Parallel = TRUE)),
     nrow = n)
 
   rownames(dr) <- rownames(M)
@@ -195,7 +197,7 @@ dissimilarity_tilde_estimation <- function(D, f = NULL) {
     )
   }
   D_tilde <- matrix(unlist(RcppAlgos::permuteGeneral(
-    c(seq(n)),2, FUN = diss, repetition = TRUE)),
+    c(seq(n)),2, FUN = diss, repetition = TRUE, Parallel = TRUE)),
     nrow = n)
 
   rownames(D_tilde) <- rownames(D)
@@ -251,7 +253,7 @@ dissimilarity_final <- function(D_estim, D) {
   }
 
   D_final <- matrix(unlist(RcppAlgos::permuteGeneral(
-    c(seq(n)),2, FUN = diss, repetition = TRUE)),
+    c(seq(n)),2, FUN = diss, repetition = TRUE, Parallel = TRUE)),
     nrow = n)
 
 
