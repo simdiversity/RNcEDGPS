@@ -60,7 +60,7 @@ validity_weight <- function(M) {
 #' @export
 dissimilarity_L1 <- function(M) {
   n <- nrow(M)
-  diss <- function(ij) {
+  diss <- function(ij, M) {
     i <- ij[1]
     j <- ij[2]
     x <- M[i, ]
@@ -73,10 +73,19 @@ dissimilarity_L1 <- function(M) {
     )
   }
 
-  matrix(unlist(RcppAlgos::permuteGeneral(
-    c(seq(n)),2, FUN = diss, repetition = TRUE,
-    Parallel = TRUE, nThreads =num_workers)),
-  nrow = n)
+  combos = unlist(RcppAlgos::comboGeneral(
+    c(seq(n)),2,
+    Parallel = TRUE, nThreads = num_workers))
+
+  d <- matrix(0, n, n)
+
+  d[upper.tri(d, diag = FALSE)] <- apply(
+    combos, MARGIN = 1, FUN = diss, M = M
+  )
+  d[lower.tri(d, diag = FALSE)] <- d[upper.tri(d, diag = FALSE)]
+  rownames(d) <- rownames(M)
+  colnames(d) <- rownames(M)
+  d
 }
 
 #' Compute column disputedness
@@ -95,26 +104,25 @@ disputedness <- function(M, f = NULL) {
   if (is.null(f)) f <- rep(1 / n, n)
   p <- ncol(M)
   ks <- seq(p)
-  out <- lapply(ks, function(k) {
+  out <- parallel::mclapply(ks, function(k) {
     result <- list()
     not_na <- which(!is.na(M[, k]))
     result$numk <- sum(unlist(
-      RcppAlgos::comboGeneral(
+      combn(
         not_na, 2,
         FUN = function(d) {
           f[d[1]] * f[d[2]] * abs(M[d[1], k] - M[d[2], k])
-        },
-        Parallel = TRUE, nThreads =num_workers
+        }
       ))
     )
     result$denk <- sum(unlist(
-      RcppAlgos::comboGeneral(not_na, 2, FUN = function(d) {f[d[1]] * f[d[2]]},
-                              Parallel = TRUE, nThreads =num_workers)
+      RcppAlgos::comboGeneral(not_na, 2,constraintFun = "prod",
+                              Parallel = TRUE, nThreads = num_workers)
     )
     )
 
     result
-  })
+  }, mc.cores = num_workers)
   out <- do.call(rbind.data.frame, out)
 
   result <- out$numk / out$denk
@@ -138,10 +146,10 @@ disputedness <- function(M, f = NULL) {
 #' @export
 dissimilarity_disputedness <- function(M, f, disp) {
   n <- nrow(M)
-  if (is.null(weights)) {
-    weights <- rep(1 / n, n)
+  if (is.null(f)) {
+    f <- rep(1 / n, n)
   }
-  diss <- function(ij) {
+  diss <- function(ij, M, f, disp) {
     i <- ij[1]
     j <- ij[2]
     x <- M[i, ]
@@ -149,21 +157,26 @@ dissimilarity_disputedness <- function(M, f, disp) {
     k <- which(!is.na(x + y))
     ifelse(
       is.null(k),
-      NA,
-      sum(
+     NA,
+    sum(
         f[i] * f[j] * disp[k] * abs(x[k] - y[k])
       ) / sum(disp[k])
     )
   }
 
-    dr <- matrix(unlist(RcppAlgos::permuteGeneral(
-    c(seq(n)), 2, FUN = diss, repetition = TRUE,
-    Parallel = TRUE, nThreads =num_workers)),
-    nrow = n)
+  combos = unlist(RcppAlgos::comboGeneral(
+    c(seq(n)),2,
+    Parallel = TRUE, nThreads = num_workers))
 
-  rownames(dr) <- rownames(M)
-  colnames(dr) <- rownames(M)
-  dr
+  d <- matrix(0, n, n)
+
+  d[upper.tri(d, diag = FALSE)] <- apply(
+    combos, MARGIN = 1, FUN = diss, M = M, f = f, disp = disp
+  )
+  d[lower.tri(d, diag = FALSE)] <- d[upper.tri(d, diag = FALSE)]
+  rownames(d) <- rownames(M)
+  colnames(d) <- rownames(M)
+  d
 }
 
 #' Compute the dissimilarity estimation
@@ -184,7 +197,7 @@ dissimilarity_tilde_estimation <- function(D, f = NULL) {
   if (is.null(f)) {
     f <- rep(1 / n, n)
   }
-  diss <- function(ij) {
+  diss <- function(ij, D, f) {
     i <- ij[1]
     j <- ij[2]
     x <- D[i, ]
@@ -198,14 +211,20 @@ dissimilarity_tilde_estimation <- function(D, f = NULL) {
       ) / sum(f[k]) - (sum(f[k] * (x[k] - y[k])) / sum(f[k]))^2
     )
   }
-  D_tilde <- matrix(unlist(RcppAlgos::permuteGeneral(
-    c(seq(n)),2, FUN = diss, repetition = TRUE,
-    Parallel = TRUE, nThreads =num_workers)),
-    nrow = n)
 
-  rownames(D_tilde) <- rownames(D)
-  colnames(D_tilde) <- colnames(D)
-  D_tilde
+  combos = unlist(RcppAlgos::comboGeneral(
+    c(seq(n)),2,
+    Parallel = TRUE, nThreads = num_workers))
+
+  d <- matrix(0, n, n)
+
+  d[upper.tri(d, diag = FALSE)] <- apply(
+    combos, MARGIN = 1, FUN = diss, D = D, f = f
+  )
+  d[lower.tri(d, diag = FALSE)] <- d[upper.tri(d, diag = FALSE)]
+  rownames(d) <- rownames(D)
+  colnames(d) <- rownames(D)
+  d
 }
 
 #' Compute the dissimilarity estimation
@@ -245,7 +264,7 @@ dissimilarity_regression_estimation <- function(D) {
 #' @export
 dissimilarity_final <- function(D_estim, D) {
   n <- nrow(D)
-  diss <- function(ij) {
+  diss <- function(ij, D_estim, D) {
     i <- ij[1]
     j <- ij[2]
     ifelse(
@@ -254,16 +273,19 @@ dissimilarity_final <- function(D_estim, D) {
       0.5 * (D_estim[i, j] + D[i, j])
     )
   }
+  combos = unlist(RcppAlgos::comboGeneral(
+    c(seq(n)),2,
+    Parallel = TRUE, nThreads = num_workers))
 
-  D_final <- matrix(unlist(RcppAlgos::permuteGeneral(
-    c(seq(n)),2, FUN = diss, repetition = TRUE,
-    Parallel = TRUE, nThreads =num_workers)),
-    nrow = n)
+  d <- matrix(0, n, n)
 
-
-  rownames(D_final) <- rownames(D)
-  colnames(D_final) <- colnames(D)
-  D_final
+  d[upper.tri(d, diag = FALSE)] <- apply(
+    combos, MARGIN = 1, FUN = diss, D_estim = D_estim, D = D
+  )
+  d[lower.tri(d, diag = FALSE)] <- d[upper.tri(d, diag = FALSE)]
+  rownames(d) <- rownames(D)
+  colnames(d) <- rownames(D)
+  d
 }
 
 #' Compute the distance estimation
