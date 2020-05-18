@@ -2,14 +2,25 @@
 % Please edit documentation in R/tasissa-lai.R
 \name{alternating_completion}
 \alias{alternating_completion}
-\title{Tasissa-Lai Algorithm
-CONVERTED FROM:
-Abiy Tasissa and Rongjie Lai, "Exact Reconstruction of Euclidean Distance Geometry Problem Using Low-rank Matrix Completion," in IEEE Transactions on Information Theory, 2018. doi: 10.1109/TIT.2018.2881749
-https://github.com/abiy-tasissa/Nonconvex-Euclidean-Distance-Geometry-Problem-Solver}
+\title{Tasissa-Lai Algorithm}
 \usage{
 alternating_completion(D, Selected, opts, lsopts)
 }
+\arguments{
+\item{D}{partial distance}
+
+\item{Selected}{selected missing}
+
+\item{opts}{options}
+
+\item{lsopts}{other options}
+}
 \description{
+CONVERTED FROM:
+Abiy Tasissa and Rongjie Lai, "Exact Reconstruction of Euclidean Distance Geometry Problem Using Low-rank Matrix Completion," in IEEE Transactions on Information Theory, 2018. doi: 10.1109/TIT.2018.2881749
+https://github.com/abiy-tasissa/Nonconvex-Euclidean-Distance-Geometry-Problem-Solver
+}
+\details{
 TODO: needs testing!
 }
 \note{
