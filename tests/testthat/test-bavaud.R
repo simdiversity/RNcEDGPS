@@ -1,6 +1,6 @@
 test_that("disputedness works", {
   M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-  f < -c(.5, .3, .2)
+  f <- -c(.5, .3, .2)
   p <- ncol(M)
   n <- nrow(M)
   do <- c()
@@ -14,5 +14,5 @@ test_that("disputedness works", {
       }}
   do[k] = NumK/DenK
   }
-  expect(all.equal(do, disputedness(M,f)))
+  expect(all.equal(do, disputedness(M, f)))
 })
