@@ -14,5 +14,5 @@ test_that("disputedness works", {
       }}
   do[k] = NumK/DenK
   }
-  expect(all.equal(do, disputedness(M, f)))
+  expect(all.equal(do, disputedness(M, f)), "There is a problem computing disputedness")
 })
