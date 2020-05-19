@@ -95,7 +95,7 @@ dissimilarity_L1 <- function(M) {
 #' @return a named array containing the column disputedness
 #'
 #' @examples
-#' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
+#' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0, 1, 3, 5, NA, 3, 2), nrow = 3)
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
 #' disputedness(M,f)
 #' @export
@@ -107,21 +107,22 @@ disputedness <- function(M, f = NULL) {
   out <- parallel::mclapply(ks, function(k) {
     result <- list()
     not_na <- which(!is.na(M[, k]))
-    result$numk <- sum(unlist(
-      combn(
+    result$denk <- sum(combn(
+      not_na, 2L,
+      FUN = function(d, k, f) (f[d[1]] + f[d[2]])^2,
+      simplify = TRUE,
+      k = k, f = f
+    ))
+    result$numk <- sum(combn(
         not_na, 2,
-        FUN = function(d) {
-          f[d[1]] * f[d[2]] * abs(M[d[1], k] - M[d[2], k])
-        }
+        FUN = function(d, k, f, M) {
+          abs(M[d[1], k] - M[d[2], k]) * f[d[1]] * f[d[2]] * 2L
+        },
+        simplify = TRUE,
+        k = k, f = f, M = M
       ))
-    )
-    result$denk <- sum(unlist(
-      RcppAlgos::comboGeneral(not_na, 2,constraintFun = "prod",
-                              Parallel = TRUE, nThreads = num_workers)
-    )
-    )
 
-    result
+     result
   }, mc.cores = num_workers)
   out <- do.call(rbind.data.frame, out)
 
