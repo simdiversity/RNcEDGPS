@@ -107,22 +107,23 @@ disputedness <- function(M, f = NULL) {
   out <- parallel::mclapply(ks, function(k) {
     result <- list()
     not_na <- which(!is.na(M[, k]))
-    result$denk <- sum(combn(
-      not_na, 2L,
+    m = -length(not_na) + 2
+    result$denk <- (m * sum(f[not_na]^2)) + sum(combn(
+      not_na, 2,
       FUN = function(d, k, f) (f[d[1]] + f[d[2]])^2,
       simplify = TRUE,
       k = k, f = f
     ))
     result$numk <- sum(combn(
-        not_na, 2,
-        FUN = function(d, k, f, M) {
-          abs(M[d[1], k] - M[d[2], k]) * f[d[1]] * f[d[2]] * 2L
-        },
-        simplify = TRUE,
-        k = k, f = f, M = M
-      ))
+      not_na, 2,
+      FUN = function(d, k, f, M) {
+        abs(M[d[1], k] - M[d[2], k]) * f[d[1]] * f[d[2]] * 2L
+      },
+      simplify = TRUE,
+      k = k, f = f, M = M
+    ))
 
-     result
+    result
   }, mc.cores = num_workers)
   out <- do.call(rbind.data.frame, out)
 

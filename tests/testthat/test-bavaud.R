@@ -1,18 +1,21 @@
 test_that("disputedness works", {
-  M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-  f <- c(.5, .3, .2)
+  M <- matrix(c(1, 2, NA, 3, NA ,5, NA, 6, 5, 4, 19, 5, 0, NA, 0, 3, 4, 5, 6, 8, 8, 5,6,6), nrow = 4)
+  f <- c(.4, .25, .2, .1, .05)
   p <- ncol(M)
   n <- nrow(M)
   do <- c()
+  NumK = rep(0L,p);
+  DenK = rep(0L,p)
+
   for (k in 1:p) {
-  NumK = 0L; DenK = 0L
   for (i in 1:n) {
     for (j in 1:n) {
       if ((is.na(M[i,k]) == FALSE) & (is.na(M[j,k]) == FALSE)) {
-        NumK = NumK + f[i] * f[j] * abs(M[i,k] - M[j,k])
-        DenK = DenK + f[i] * f[j]}
+        NumK[k] = NumK[k] + f[i] * f[j] * abs(M[i,k] - M[j,k])
+        DenK[k] = DenK[k] + f[i] * f[j]}
       }}
-  do[k] = NumK/DenK
+  do[k] = NumK[k]/DenK[k]
   }
-  expect(all.equal(do, disputedness(M, f)), "There is a problem computing disputedness")
+  dc <-  disputedness(M, f)
+  expect(all.equal(do,dc), "There is a problem computing disputedness")
 })
