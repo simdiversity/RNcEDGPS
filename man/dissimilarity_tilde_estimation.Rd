@@ -2,7 +2,7 @@
 % Please edit documentation in R/bavaud.R
 \name{dissimilarity_tilde_estimation}
 \alias{dissimilarity_tilde_estimation}
-\title{Compute the dissimilarity estimation}
+\title{dissimilarity_tilde_estimation}
 \usage{
 dissimilarity_tilde_estimation(D, f = NULL)
 }
@@ -15,12 +15,5 @@ dissimilarity_tilde_estimation(D, f = NULL)
 a dissimilarity estimation
 }
 \description{
-Compute the dissimilarity estimation
-}
-\examples{
-M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
-disp <- disputedness(M)
-D <- dissimilarity_disputedness(M, f, disp)
-dissimilarity_tilde_estimation(D, f)
+dissimilarity_tilde_estimation
 }

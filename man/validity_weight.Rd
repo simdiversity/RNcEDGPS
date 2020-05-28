@@ -2,7 +2,7 @@
 % Please edit documentation in R/bavaud.R
 \name{validity_weight}
 \alias{validity_weight}
-\title{Compute validity weight}
+\title{validity_weight}
 \usage{
 validity_weight(M)
 }
@@ -13,9 +13,5 @@ validity_weight(M)
 a named array containing weights
 }
 \description{
-Compute validity weight
-}
-\examples{
-M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-validity_weight(M)
+validity_weight
 }

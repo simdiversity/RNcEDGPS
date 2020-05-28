@@ -16,12 +16,12 @@ if (nzchar(chk) && chk == "TRUE") {
   num_workers <- RcppAlgos::stdThreadMax()
 }
 
-#' Compute validity matrix
+#' validity_matrix
 #'
 #' @param M a matrix containing NAs
 #' @return The validity matrix containing 1 if the element is a NA 0 else.
 #'
-#' @examples
+#' @example
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 #' validity_matrix(M)
 #' @export
@@ -31,12 +31,12 @@ validity_matrix <- function(M) {
     `colnames<-`(colnames(M))
 }
 
-#' Compute validity weight
+#' validity_weight
 #'
 #' @param M a matrix containing NAs
 #' @return a named array containing weights
 #'
-#' @examples
+#' @example
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 #' validity_weight(M)
 #' @export
@@ -49,20 +49,19 @@ validity_weight <- function(M) {
   result
 }
 
-#' Compute the L1 dissimilarity
+#' dissimilarity_L1
 #'
 #' @param M a matrix containing NAs
 #' @return a dissimilarity renormalised by disputedness
 #'
-#' @examples
+#' @example
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
+#' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
 #' dissimilarity_L1(M)
 #' @export
 dissimilarity_L1 <- function(M) {
   n <- nrow(M)
-  diss <- function(ij, M) {
-    i <- ij[1]
-    j <- ij[2]
+  diss <- function(i, j) {
     x <- M[i, ]
     y <- M[j, ]
     k <- which(!is.na(x + y))
@@ -73,28 +72,23 @@ dissimilarity_L1 <- function(M) {
     )
   }
 
-  combos = unlist(RcppAlgos::comboGeneral(
-    c(seq(n)),2,
-    Parallel = TRUE, nThreads = num_workers))
-
-  d <- matrix(0, n, n)
-
-  d[upper.tri(d, diag = FALSE)] <- apply(
-    combos, MARGIN = 1, FUN = diss, M = M
+  matrix(
+    do.call(
+      parallel::mcmapply,
+      c(diss, unname(expand.grid(seq(n), seq(n))), mc.cores = num_workers),
+    ),
+    nrow = n
   )
-  d[lower.tri(d, diag = FALSE)] <- d[upper.tri(d, diag = FALSE)]
-  rownames(d) <- rownames(M)
-  colnames(d) <- rownames(M)
-  d
+
 }
 
-#' Compute column disputedness
+#' disputedness
 #'
 #' @param M a matrix containing NAs
 #' @param f an array containing weights
 #' @return a named array containing the column disputedness
 #'
-#' @examples
+#' @example
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0, 1, 3, 5, NA, 3, 2), nrow = 3)
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
 #' disputedness(M,f)
@@ -122,7 +116,6 @@ disputedness <- function(M, f = NULL) {
       simplify = TRUE,
       k = k, f = f, M = M
     ))
-
     result
   }, mc.cores = num_workers)
   out <- do.call(rbind.data.frame, out)
@@ -133,14 +126,14 @@ disputedness <- function(M, f = NULL) {
 }
 
 
-#' Compute the disputedness dissimilarity
+#' dissimilarity_disputedness
 #'
 #' @param M a matrix containing NAs
 #' @param f a named weight array
 #' @param disp an array containing column disputedness
 #' @return a dissimilarity renormalised by disputedness
 #'
-#' @examples
+#' @example
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
 #' disp <- disputedness(M)
@@ -151,43 +144,37 @@ dissimilarity_disputedness <- function(M, f, disp) {
   if (is.null(f)) {
     f <- rep(1 / n, n)
   }
-  diss <- function(ij, M, f, disp) {
-    i <- ij[1]
-    j <- ij[2]
+  diss <- function(i, j) {
     x <- M[i, ]
     y <- M[j, ]
     k <- which(!is.na(x + y))
     ifelse(
       is.null(k),
-     NA,
-    sum(
+      NA,
+      sum(
         f[i] * f[j] * disp[k] * abs(x[k] - y[k])
       ) / sum(disp[k])
     )
   }
-
-  combos = unlist(RcppAlgos::comboGeneral(
-    c(seq(n)),2,
-    Parallel = TRUE, nThreads = num_workers))
-
-  d <- matrix(0, n, n)
-
-  d[upper.tri(d, diag = FALSE)] <- apply(
-    combos, MARGIN = 1, FUN = diss, M = M, f = f, disp = disp
+  dr <- matrix(
+    do.call(
+      parallel::mcmapply,
+      c(diss, unname(expand.grid(seq(n), seq(n))), mc.cores = num_workers)
+    ),
+    nrow = n
   )
-  d[lower.tri(d, diag = FALSE)] <- d[upper.tri(d, diag = FALSE)]
-  rownames(d) <- rownames(M)
-  colnames(d) <- rownames(M)
-  d
+  rownames(dr) <- rownames(M)
+  colnames(dr) <- rownames(M)
+  dr
 }
 
-#' Compute the dissimilarity estimation
+#' dissimilarity_tilde_estimation
 #'
 #' @param D a dissimilarity
 #' @param f a named weight array
 #' @return a dissimilarity estimation
 #'
-#' @examples
+#' @example
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
 #' disp <- disputedness(M)
@@ -199,9 +186,7 @@ dissimilarity_tilde_estimation <- function(D, f = NULL) {
   if (is.null(f)) {
     f <- rep(1 / n, n)
   }
-  diss <- function(ij, D, f) {
-    i <- ij[1]
-    j <- ij[2]
+  diss <- function(i, j) {
     x <- D[i, ]
     y <- D[j, ]
     k <- which(!is.na(x + y))
@@ -214,26 +199,25 @@ dissimilarity_tilde_estimation <- function(D, f = NULL) {
     )
   }
 
-  combos = unlist(RcppAlgos::comboGeneral(
-    c(seq(n)),2,
-    Parallel = TRUE, nThreads = num_workers))
-
-  d <- matrix(0, n, n)
-
-  d[upper.tri(d, diag = FALSE)] <- apply(
-    combos, MARGIN = 1, FUN = diss, D = D, f = f
+  D_tilde <- matrix(
+    do.call(
+      parallel::mcmapply,
+      c(diss, unname(expand.grid(seq(n), seq(n))), mc.cores = num_workers)
+    ),
+    nrow = n
   )
-  d[lower.tri(d, diag = FALSE)] <- d[upper.tri(d, diag = FALSE)]
-  rownames(d) <- rownames(D)
-  colnames(d) <- rownames(D)
-  d
+
+  rownames(D_tilde) <- rownames(D)
+  colnames(D_tilde) <- colnames(D)
+  D_tilde
 }
 
-#' Compute the dissimilarity estimation
+
+#' dissimilarity_regression_estimation
 #'
 #' @param D a dissimilarity
 #'
-#' @examples
+#' @example
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
 #' d <- disputedness(M)
@@ -243,8 +227,8 @@ dissimilarity_tilde_estimation <- function(D, f = NULL) {
 dissimilarity_regression_estimation <- function(D) {
   dm <- D
   diag(dm) <- NA
-  y <- vech(sqrt(D))
-  dv <- vech(dm)
+  y <- matrixcalc::vech(sqrt(D))
+  dv <- matrixcalc::vech(dm)
   A <- stats::lm(y ~ dv - 1)
   D_estimation <- sqrt(D) / A$coefficients
   rownames(D_estimation) <- rownames(D)
@@ -252,56 +236,54 @@ dissimilarity_regression_estimation <- function(D) {
   D_estimation
 }
 
-#' Compute the dissimilarity estimation
+#' dissimilarity_final
 #'
 #' @param D_estim an estimated dissimilarity
 #' @param D a dissimilarity
 #'
-#' @examples
+#' @example
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
 #' d <- disputedness(M)
 #' D <- dissimilarity_disputedness(M, f, d)
 #' D_estim <- dissimilarity_regression_estimation(D)
+#' F_final <- dissimilarity_final(D_estim, D)
 #' @export
 dissimilarity_final <- function(D_estim, D) {
   n <- nrow(D)
-  diss <- function(ij, D_estim, D) {
-    i <- ij[1]
-    j <- ij[2]
+  diss <- function(i, j) {
     ifelse(
       is.na(D[i, j]),
       D_estim[i, j],
       0.5 * (D_estim[i, j] + D[i, j])
     )
   }
-  combos = unlist(RcppAlgos::comboGeneral(
-    c(seq(n)),2,
-    Parallel = TRUE, nThreads = num_workers))
 
-  d <- matrix(0, n, n)
-
-  d[upper.tri(d, diag = FALSE)] <- apply(
-    combos, MARGIN = 1, FUN = diss, D_estim = D_estim, D = D
+  D_final <- matrix(
+    do.call(
+      parallel::mcmapply,
+      c(diss, unname(expand.grid(seq(n), seq(n))), mc.cores = num_workers)
+    ),
+    nrow = n
   )
-  d[lower.tri(d, diag = FALSE)] <- d[upper.tri(d, diag = FALSE)]
-  rownames(d) <- rownames(D)
-  colnames(d) <- rownames(D)
-  d
+
+  rownames(D_final) <- rownames(D)
+  colnames(D_final) <- colnames(D)
+  D_final
 }
 
-#' Compute the distance estimation
+#' estimate_distance
 #'
 #' @param M a matrix
 #' @param f a named weight array
 #' @param disp disputedness
 #' @return a dissimilarity estimation
 #'
-#' @examples
+#' @example
 #' M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
 #' f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
-#' d <- disputedness(M)
-#' D <- estimate_distance(M, f, d)
+#' disp <- disputedness(M)
+#' D <- estimate_distance(M, f, disp)
 #' @export
 estimate_distance <- function(M, f, disp = NULL) {
   if (is.null(disp)) disp <- disputedness(M, f)

@@ -2,7 +2,7 @@
 % Please edit documentation in R/bavaud.R
 \name{dissimilarity_disputedness}
 \alias{dissimilarity_disputedness}
-\title{Compute the disputedness dissimilarity}
+\title{dissimilarity_disputedness}
 \usage{
 dissimilarity_disputedness(M, f, disp)
 }
@@ -17,11 +17,5 @@ dissimilarity_disputedness(M, f, disp)
 a dissimilarity renormalised by disputedness
 }
 \description{
-Compute the disputedness dissimilarity
-}
-\examples{
-M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
-disp <- disputedness(M)
-dissimilarity_disputedness(M, f,disp)
+dissimilarity_disputedness
 }

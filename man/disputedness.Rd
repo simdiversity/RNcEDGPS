@@ -2,7 +2,7 @@
 % Please edit documentation in R/bavaud.R
 \name{disputedness}
 \alias{disputedness}
-\title{Compute column disputedness}
+\title{disputedness}
 \usage{
 disputedness(M, f = NULL)
 }
@@ -15,10 +15,5 @@ disputedness(M, f = NULL)
 a named array containing the column disputedness
 }
 \description{
-Compute column disputedness
-}
-\examples{
-M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
-disputedness(M,f)
+disputedness
 }

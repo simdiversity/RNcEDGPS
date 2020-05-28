@@ -2,7 +2,7 @@
 % Please edit documentation in R/bavaud.R
 \name{dissimilarity_final}
 \alias{dissimilarity_final}
-\title{Compute the dissimilarity estimation}
+\title{dissimilarity_final}
 \usage{
 dissimilarity_final(D_estim, D)
 }
@@ -12,12 +12,5 @@ dissimilarity_final(D_estim, D)
 \item{D}{a dissimilarity}
 }
 \description{
-Compute the dissimilarity estimation
-}
-\examples{
-M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
-d <- disputedness(M)
-D <- dissimilarity_disputedness(M, f, d)
-D_estim <- dissimilarity_regression_estimation(D)
+dissimilarity_final
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/bavaud.R
 \name{dissimilarity_L1}
 \alias{dissimilarity_L1}
-\title{Compute the L1 dissimilarity}
+\title{dissimilarity_L1}
 \usage{
 dissimilarity_L1(M)
 }
@@ -13,9 +13,5 @@ dissimilarity_L1(M)
 a dissimilarity renormalised by disputedness
 }
 \description{
-Compute the L1 dissimilarity
-}
-\examples{
-M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-dissimilarity_L1(M)
+dissimilarity_L1
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/bavaud.R
 \name{estimate_distance}
 \alias{estimate_distance}
-\title{Compute the distance estimation}
+\title{estimate_distance}
 \usage{
 estimate_distance(M, f, disp = NULL)
 }
@@ -17,11 +17,5 @@ estimate_distance(M, f, disp = NULL)
 a dissimilarity estimation
 }
 \description{
-Compute the distance estimation
-}
-\examples{
-M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-f <- rowSums(M, na.rm = TRUE) / sum(M, na.rm = TRUE)
-d <- disputedness(M)
-D <- estimate_distance(M, f, d)
+estimate_distance
 }

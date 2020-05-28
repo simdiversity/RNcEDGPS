@@ -19,8 +19,7 @@ alternating_completion(D, Selected, opts, lsopts)
 CONVERTED FROM:
 Abiy Tasissa and Rongjie Lai, "Exact Reconstruction of Euclidean Distance Geometry Problem Using Low-rank Matrix Completion," in IEEE Transactions on Information Theory, 2018. doi: 10.1109/TIT.2018.2881749
 https://github.com/abiy-tasissa/Nonconvex-Euclidean-Distance-Geometry-Problem-Solver
-}
-\details{
+
 TODO: needs testing!
 }
 \note{

@@ -4,6 +4,8 @@ NULL
 
 #' Tasissa-Lai Algorithm
 #'
+#' @description
+#'
 #' CONVERTED FROM:
 #' Abiy Tasissa and Rongjie Lai, "Exact Reconstruction of Euclidean Distance Geometry Problem Using Low-rank Matrix Completion," in IEEE Transactions on Information Theory, 2018. doi: 10.1109/TIT.2018.2881749
 #' https://github.com/abiy-tasissa/Nonconvex-Euclidean-Distance-Geometry-Problem-Solver
@@ -44,7 +46,7 @@ NULL
 #' @param Selected selected missing
 #' @param opts options
 #' @param lsopts other options
-#'
+#' @export
 alternating_completion <- function(D, Selected, opts, lsopts) {
   norm <- function(x) sqrt(sum(x^2))
   # -------------------------------------------------------------------------

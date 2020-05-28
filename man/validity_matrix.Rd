@@ -2,7 +2,7 @@
 % Please edit documentation in R/bavaud.R
 \name{validity_matrix}
 \alias{validity_matrix}
-\title{Compute validity matrix}
+\title{validity_matrix}
 \usage{
 validity_matrix(M)
 }
@@ -13,9 +13,5 @@ validity_matrix(M)
 The validity matrix containing 1 if the element is a NA 0 else.
 }
 \description{
-Compute validity matrix
-}
-\examples{
-M <- matrix(c(1, 2, NA, NA, 4, 19, 0, NA, 0), nrow = 3)
-validity_matrix(M)
+validity_matrix
 }
