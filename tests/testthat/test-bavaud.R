@@ -26,12 +26,12 @@ test_that("unweighted disputedness works", {
   p <- ncol(M)
   n <- nrow(M)
   do <- c()
-  for(k in 1:p) {
+  for (k in 1:p) {
     NumK = 0; DenK = 0
     for (i in 1:n) {
       for (j in 1:n) {
-        if((is.na(M[i,k]) == FALSE) & (is.na(M[j,k]) == FALSE)){
-          NumK = NumK + abs(M[i,k]-M[j,k])
+        if ((is.na(M[i,k]) == FALSE) & (is.na(M[j,k]) == FALSE)) {
+          NumK = NumK + abs(M[i,k] - M[j,k])
           DenK = DenK + 1
           }
         }

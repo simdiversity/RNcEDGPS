@@ -102,8 +102,7 @@ disputedness <- function(M, f = NULL) {
     out <- parallel::mclapply(ks, function(k) {
       result <- list()
       not_na <- which(!is.na(M[, k]))
-      m = -length(not_na) + 2
-      result$denk <- length(m)
+      result$denk <- length(not_na) ^ 2L
       result$numk <- sum(combn(
         not_na, 2,
         FUN = function(d, k, M) {
