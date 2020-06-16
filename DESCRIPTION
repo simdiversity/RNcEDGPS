@@ -21,7 +21,8 @@ Imports:
     Rcpp (>= 1.0.4),
     rlang (>= 0.1.2),
     RcppAlgos,
-    BB
+    BB,
+    filling
 Suggests: 
     lintr,
     testthat,
