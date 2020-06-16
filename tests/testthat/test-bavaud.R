@@ -1,4 +1,4 @@
-test_that("disputedness works", {
+test_that("weighted disputedness works", {
   M <- matrix(c(1, 2, NA, 3, NA ,5, NA, 6, 5, 4, 19, 5, 0, NA, 0, 3, 4, 5, 6, 8, 8, 5,6,6), nrow = 4)
   f <- c(.4, .25, .2, .1, .05)
   p <- ncol(M)
@@ -17,5 +17,27 @@ test_that("disputedness works", {
   do[k] = NumK[k]/DenK[k]
   }
   dc <-  disputedness(M, f)
+  expect(all.equal(do,dc), "There is a problem computing disputedness")
+})
+
+test_that("unweighted disputedness works", {
+  M <- matrix(c(1, 2, NA, 3, NA ,5, NA, 6, 5, 4, 19, 5, 0, NA, 0, 3, 4, 5, 6, 8, 8, 5,6,6), nrow = 4)
+  f <- c(.4, .25, .2, .1, .05)
+  p <- ncol(M)
+  n <- nrow(M)
+  do <- c()
+  for(k in 1:p) {
+    NumK = 0; DenK = 0
+    for (i in 1:n) {
+      for (j in 1:n) {
+        if((is.na(M[i,k]) == FALSE) & (is.na(M[j,k]) == FALSE)){
+          NumK = NumK + abs(M[i,k]-M[j,k])
+          DenK = DenK + 1
+          }
+        }
+      }
+    do[k] = NumK/DenK
+  }
+  dc <-  disputedness(M)
   expect(all.equal(do,dc), "There is a problem computing disputedness")
 })
