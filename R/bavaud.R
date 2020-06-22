@@ -94,7 +94,6 @@ dissimilarity_L1 <- function(M) {
 #' disputedness(M,f)
 #' @export
 disputedness <- function(M, f = NULL) {
-  n <- nrow(M)
   p <- ncol(M)
   ks <- seq(p)
   if (is.null(f)) {
