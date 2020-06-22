@@ -1,3 +1,5 @@
+#'
+NULL
 #' sphere_vertices
 #'
 #' @param xc x cooddinate for the center of the sphere
