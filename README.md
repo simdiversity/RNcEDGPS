@@ -1,4 +1,5 @@
-[![R-CMD-check](https://github.com/simdiversity/RNcEDGPS/workflows/R-CMD-check/badge.svg)](https://github.com/simdiversity/RNcEDGPS/actions)
+[![R-CMD-check](https://github.com/simdiversity/RNcEDGPS/workflows/R-CMD-check/badge.svg)](https://github.com/simdiversity/RNcEDGPS/actions) [![DOI](https://zenodo.org/badge/259299513.svg)](https://zenodo.org/badge/latestdoi/259299513)
+
 
 
 # RNcEDGPS
